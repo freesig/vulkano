@@ -15,7 +15,7 @@ use std::ops::DerefMut;
 use std::ops::Range;
 use std::os::raw::c_void;
 use std::ptr;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use Error;
 use OomError;
@@ -188,7 +188,7 @@ impl DeviceMemory {
 
         Ok(MappedDeviceMemory {
                memory: mem,
-               pointer: Mutex::new(ptr),
+               pointer: ptr,
                coherent: coherent,
            })
     }
@@ -283,7 +283,7 @@ impl Drop for DeviceMemory {
 /// ```
 pub struct MappedDeviceMemory {
     memory: DeviceMemory,
-    pointer: Mutex<*mut c_void>,
+    pointer: *mut c_void,
     coherent: bool,
 }
 
@@ -306,29 +306,6 @@ impl MappedDeviceMemory {
         self.memory
     }
 
-    pub fn disable_map(&self) {
-        unsafe {
-            let device = self.memory.device();
-            let vk = device.pointers();
-            vk.UnmapMemory(device.internal_object(), self.memory.memory);
-        }
-    }
-
-    pub fn activate_map(&self) {
-        unsafe{
-            let device = self.memory.device();
-            let vk = device.pointers();
-            let mut ptr = self.pointer.lock().unwrap();
-            check_errors(vk.MapMemory(device.internal_object(),
-            self.memory.memory,
-            0,
-            self.memory.size as vk::DeviceSize,
-            0, /* reserved flags */
-            &mut *ptr)).expect("Failed to remap");
-        }
-
-    }
-
     /// Gives access to the content of the memory.
     ///
     /// This function takes care of calling `vkInvalidateMappedMemoryRanges` and
@@ -348,8 +325,7 @@ impl MappedDeviceMemory {
         where T: Content
     {
         let vk = self.memory.device().pointers();
-        let ptr: *const c_void = *self.pointer.lock().unwrap();
-        let pointer = T::ref_from_ptr((ptr as usize + range.start) as *mut _,
+        let pointer = T::ref_from_ptr((self.pointer as usize + range.start) as *mut _,
                                       range.end - range.start)
             .unwrap(); // TODO: error
 
