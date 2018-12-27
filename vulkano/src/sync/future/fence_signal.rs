@@ -164,6 +164,7 @@ impl<F> FenceSignalFuture<F>
 
         match *state {
             FenceSignalFutureState::Flushed(ref mut prev, ref fence) => {
+                /*
                 match fence.wait(Some(Duration::from_secs(0))) {
                     Ok(()) => unsafe {
                         prev.signal_finished()
@@ -173,6 +174,21 @@ impl<F> FenceSignalFuture<F>
                         return;
                     },
                 }
+                */
+                std::thread::sleep(Duration::from_millis(1));
+                match fence.ready() {
+                    Ok(true) => unsafe {
+                        prev.signal_finished()
+                    },
+                    Ok(false) => {
+                        prev.cleanup_finished();
+                        return;
+                    },
+                    Err(_) => {
+                        prev.cleanup_finished();
+                        return;
+                    },
+                }               
             },
             FenceSignalFutureState::Pending(ref mut prev, _) => {
                 prev.cleanup_finished();
