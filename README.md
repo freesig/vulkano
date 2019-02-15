@@ -96,8 +96,6 @@ sudo apt-get install build-essential git python cmake libvulkan-dev vulkan-utils
 
 ### macOS and iOS Specific Setup
 
-TLDR; In the best case, vulkano should work on macOS without having to take any further action, read on if you need more information or something goes wrong.
-
 Vulkan is not natively supported by macOS and iOS. However, there exists [MoltenVK](https://github.com/KhronosGroup/MoltenVK)
 a Vulkan implementation on top of Apple's Metal API. This allows vulkano to build and run on macOS
 and iOS platforms.
@@ -111,9 +109,7 @@ the required features until macOS 10.12. See https://github.com/vulkano-rs/vulka
 
 #### macOS and iOS Automatic Setup
 
-Vulkano will attempt to automatically download and install the latest Vulkan SDK for macOS.
-The SDK will be installed at `$HOME/.vulkan_sdk`.
-If you are not using bash as your shell you will need to manually add the environment variables listed in step 2 of "macOS and iOS Manual Setup".
+[moltenvk_deps](https://crates.io/crates/moltenvk_deps) is a crate that you can use to automatically download and install the latest Vulkan SDK for macOS.
 
 #### macOS and iOS Manual Setup
 
